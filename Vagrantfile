@@ -7,7 +7,7 @@
 # you're doing.a
 
 VAGRANTFILE_API_VERSION = "2"
-NODE_COUNT = 10
+NODE_COUNT = 2
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provision "shell", path: "./provisioning/default_setting.sh", args: ""
   config.vm.synced_folder "~/.ssh/", "/tmp/conf.d/"
@@ -16,7 +16,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   NODE_COUNT.times do |i|
     node_id = "vmhost0#{i}"
     config.vm.define node_id do |node|
-                                                                  ### Args= [service name] [master / slave] [master IP] [advertise IP]
+### Args= [service name] [master / slave] [master IP] [advertise IP]
     config.vm.provision "shell", path: "./provisioning/vmhosts.sh", args: ""
 #    config.vm.network "forwarded_port", guest: 80, host: "880#{i}"
 #    config.vm.network "private_network", ip: "192.158.10.1#{i}"
@@ -42,7 +42,21 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   config.vm.provider :virtualbox do |vb|
-      vb.customize ["modifyvm", :id, "--memory", "2048"]
-      vb.customize ["modifyvm", :id, "--cpus", "2"]   
+      vb.customize ["modifyvm", :id, "--memory", "1024"]
+      vb.customize ["modifyvm", :id, "--cpus", "1"]   
+  end 
+
+## For Storage server for all same service farm support
+  config.vm.define "nfs" do |nfs|
+    config.vm.provision "shell", path: "./provisioning/nfs.sh", args: ""
+#    config.vm.network "public_network", :dev => "br0", :mode => "bridge", :type => "bridge0", :ip => "192.158.10.100", :netmask => "255.255.255.0", :auto_config => "false"
+    config.vm.network "private_network", :dev => "eth0", :ip => "192.200.10.200"
+#    config.vm.network "forwarded_port", guest: 8080, host: 8080
+    nfs.vm.box = "ubuntu1404"
+  end
+
+  config.vm.provider :virtualbox do |vb|
+      vb.customize ["modifyvm", :id, "--memory", "512"]
+      vb.customize ["modifyvm", :id, "--cpus", "1"]   
   end 
 end
